@@ -1,4 +1,6 @@
-from scraper import zonaprop,mercadolibre
+from scraper import zonaprop,mercadolibre,argenprop
 
-zonaprop.zonaprop()
+argenprop.get_rent_properties_caba()
+
+#zonaprop.zonaprop()
 #mercadolibre.get_rent_properties_caba()

@@ -47,3 +47,6 @@ class Property:
 
     def __hash__(self):
         return hash(self.url)
+    
+    def setPropertyType(self,str):
+        self.prop_type = PropertyType.from_str(str)

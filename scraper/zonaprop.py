@@ -1,96 +1,27 @@
-import requests
+from bs4 import BeautifulSoup
+import cloudscraper
+import urllib.request
 import json
 import gzip
 import brotli
-import urllib
-
 
 from scraper.enums import PropertyType, Currency, Page
+from scraper.property import Property
 
-ZONAPROP_API = "https://www.zonaprop.com.ar/rplis-api/postings"
-HEADERS = {
-        'Content-Type':'application/json',
-        'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
-        'Accept':'*/*',
-        'Cache-Control':'no-cache',
-        'Accept-Encoding':'gzip, deflate, br',
-        'Host':'www.zonaprop.com.ar',
-        'Connection':'keep-alive'
-         }
-
-def get_cookies():
-
-    url = "https://www.zonaprop.com.ar/rplis-api/postings"
-
-    payload = json.dumps({
-      "q": None,
-      "direccion": None,
-      "moneda": None,
-      "preciomin": None,
-      "preciomax": None,
-      "services": "",
-      "general": "",
-      "searchbykeyword": "",
-      "amenidades": "",
-      "caracteristicasprop": None,
-      "comodidades": "",
-      "disposicion": None,
-      "roomType": "",
-      "outside": "",
-      "areaPrivativa": "",
-      "areaComun": "",
-      "multipleRets": "",
-      "tipoDePropiedad": "1,2,2001",
-      "subtipoDePropiedad": None,
-      "tipoDeOperacion": "2",
-      "garages": None,
-      "antiguedad": None,
-      "expensasminimo": None,
-      "expensasmaximo": None,
-      "habitacionesminimo": 0,
-      "habitacionesmaximo": 0,
-      "ambientesminimo": 0,
-      "ambientesmaximo": 0,
-      "banos": None,
-      "superficieCubierta": 1,
-      "idunidaddemedida": 1,
-      "metroscuadradomin": None,
-      "metroscuadradomax": None,
-      "tipoAnunciante": "ALL",
-      "grupoTipoDeMultimedia": "",
-      "publicacion": None,
-      "sort": "relevance",
-      "etapaDeDesarrollo": "",
-      "auctions": None,
-      "polygonApplied": None,
-      "idInmobiliaria": None,
-      "excludePostingContacted": "",
-      "banks": "",
-      "pagina": 4,
-      "city": None,
-      "province": "6",
-      "zone": None,
-      "valueZone": None,
-      "subZone": None,
-      "coordenates": None
-    })
-    headers = {
-      'Content-Type': 'application/json'
-    }
+ZONAPROP_API_PATH = "/rplis-api/postings"
+URL_ZONAPROP = "https://www.zonaprop.com.ar"
 
 
-    response = requests.request("POST", url, headers=headers, data=payload, proxies=urllib.request.getproxies())
+def get_max_page_number(response):
+    return response["paging"]["totalPages"]
 
-    print(response.text)
 
-    return response.cookies
-
-def get_response(pageNumber,cookies):
+def get_response_(pageNumber):
     with open('./scraper/resources/zonapropRequest.json') as file:
         file_contents = file.read()
     requestJson = json.loads(file_contents)
     requestJson["pagina"] = pageNumber
-
+    scraper = cloudscraper.create_scraper()
     headers = {
         'Accept':'*/*',
         'Accept-Encoding':'gzip, deflate, br',
@@ -102,16 +33,67 @@ def get_response(pageNumber,cookies):
         'Cache-Control':'no-cache',
         'Host':'www.zonaprop.com.ar'
          }
-    response = requests.post(ZONAPROP_API,json=requestJson ,headers=HEADERS,cookies=cookies.get_dict())
+    response = scraper.post(URL_ZONAPROP+ZONAPROP_API_PATH,json=requestJson)
     return response
 
 
+def read_property_zonaprop(data):
+    property = Property(page=Page.ZONAPROP)
+
+    property.url = URL_ZONAPROP + data["url"]
+
+    # Set data of price (precio, moneda, expensas)
+    operation_types = data["priceOperationTypes"]
+    for operation_type in operation_types:
+        price = operation_type["prices"][0]
+        property.price = price["amount"] if "amount" in price else 0
+        property.set_currency(price["currency"] if "currency" in price else "ARS")
+
+    property.expenses = data["expenses"]["amount"] if "expenses" in data and "amount" in data["expenses"] else 0
+
+    # Set data of features (superficie, ambientes, dormitorios, banios, cochera)
+    features = data["mainFeatures"]
+    keys = features.keys()
+
+    for key in keys:
+        value = to_number(features[key]["value"]) if "value" in features[key] else 0
+
+        if key == "CFT100":
+            property.totalArea = value
+        elif key == "CFT101":
+            property.coveredArea = value
+        elif key == "CFT1":
+            property.rooms = value
+        elif key == "CFT2":
+            property.bedrooms = value
+        elif key == "CFT3":
+            property.bathrooms = value
+        elif key == "CFT7":
+            property.garage = value
+        else:
+            pass  # Handle rest of the keys here if needed
+
+    # Set data of property type
+    property.set_property_type(data["realEstateType"]["name"])
+
+    # Set data of location (barrio, direccion, coordenadas)
+    post_location = data["postingLocation"]
+    property.address = post_location["address"]["name"] if "address" in post_location and "name" in post_location["address"] else ""
+
+    if "location" in post_location and "label" in post_location["location"] and post_location["location"]["label"] == "BARRIO":
+        property.neighborhood = post_location["location"]["name"]
+    else:
+        property.neighborhood = post_location["location"]["parent"]["name"] if "location" in post_location and "parent" in post_location["location"] and "name" in post_location["location"]["parent"] else ""
+
+    return property
+
 def zonaprop():
-    cookies = get_cookies()
-    test = cookies.get_dict()
-    print(test)
+
     page = 1
     totalPages = 1
-    #while page <= totalPages:
-       #response = get_response(page,cookies).json()
-        #totalPages = response["paging"]["totalPages"]
+    properties = set()
+
+    while page <= totalPages:
+        response = get_response(page).json()
+        totalPages = response["paging"]["totalPages"]
+        posting = response["listPostings"]

@@ -12,8 +12,8 @@ class Property:
         price=0,
         currency=Currency.ARS,
         expenses=0,
-        totalArea=0,
-        coveredArea=0,
+        total_area=0,
+        covered_area=0,
         rooms=0,
         bedrooms=0,
         bathrooms=0,
@@ -29,8 +29,8 @@ class Property:
         self.price = price
         self.currency = currency
         self.expenses = expenses
-        self.total_area = totalArea
-        self.covered_area = coveredArea
+        self.total_area = total_area
+        self.covered_area = covered_area
         self.rooms = rooms
         self.bedrooms = bedrooms
         self.bathrooms = bathrooms
@@ -49,4 +49,10 @@ class Property:
         return hash(self.url)
     
     def setPropertyType(self,str):
+        self.prop_type = PropertyType.from_str(str)
+
+    def set_currency(self, str):
+        self.currency = Currency.from_str(str)
+
+    def set_property_type(self, str):
         self.prop_type = PropertyType.from_str(str)

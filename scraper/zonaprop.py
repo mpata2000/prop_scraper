@@ -7,6 +7,7 @@ import brotli
 
 from scraper.enums import PropertyType, Currency, Page
 from scraper.property import Property
+from scraper.utils import to_number
 
 ZONAPROP_API_PATH = "/rplis-api/postings"
 URL_ZONAPROP = "https://www.zonaprop.com.ar"
@@ -16,7 +17,7 @@ def get_max_page_number(response):
     return response["paging"]["totalPages"]
 
 
-def get_response_(pageNumber):
+def get_response_api(pageNumber):
     with open('./scraper/resources/zonapropRequest.json') as file:
         file_contents = file.read()
     requestJson = json.loads(file_contents)
@@ -41,13 +42,16 @@ def read_property_zonaprop(data):
     property = Property(page=Page.ZONAPROP)
 
     property.url = URL_ZONAPROP + data["url"]
+    property.title = data["title"]
+    property.description = data["description"]
 
     # Set data of price (precio, moneda, expensas)
     operation_types = data["priceOperationTypes"]
     for operation_type in operation_types:
-        price = operation_type["prices"][0]
-        property.price = price["amount"] if "amount" in price else 0
-        property.set_currency(price["currency"] if "currency" in price else "ARS")
+        if operation_type["operationType"]["name"] == "Alquiler":
+            price = operation_type["prices"][0]
+            property.price = price["amount"] if "amount" in price else 0
+            property.set_currency(price["currency"] if "currency" in price else "ARS")
 
     property.expenses = data["expenses"]["amount"] if "expenses" in data and "amount" in data["expenses"] else 0
 
@@ -70,8 +74,6 @@ def read_property_zonaprop(data):
             property.bathrooms = value
         elif key == "CFT7":
             property.garage = value
-        else:
-            pass  # Handle rest of the keys here if needed
 
     # Set data of property type
     property.set_property_type(data["realEstateType"]["name"])
@@ -94,6 +96,8 @@ def zonaprop():
     properties = set()
 
     while page <= totalPages:
-        response = get_response(page).json()
+        response = get_response_api(page).json()
         totalPages = response["paging"]["totalPages"]
-        posting = response["listPostings"]
+        postings = response["listPostings"]
+        for post in postings:
+            properties.add(read_property_zonaprop(post))

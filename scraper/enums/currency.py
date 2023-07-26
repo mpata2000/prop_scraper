@@ -6,7 +6,7 @@ class Currency(Enum):
     USD = "USD"
 
     @staticmethod
-    def from_string(s):
+    def from_str(s):
         upper_s = s.upper()
         if upper_s in ["USD", "U$S", "DOLARES", "DÓLARES"]:
             return Currency.USD

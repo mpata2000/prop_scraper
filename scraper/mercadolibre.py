@@ -41,9 +41,9 @@ def parse_properties(data):
         elif attr_id == "FULL_BATHROOMS":
             property_data["bathrooms"] = get_value_from_attribute(attribute)
         elif attr_id == "TOTAL_AREA":
-            property_data["totalArea"] = get_value_from_attribute(attribute)
+            property_data["total_area"] = get_value_from_attribute(attribute)
         elif attr_id == "COVERED_AREA":
-            property_data["coveredArea"] = get_value_from_attribute(attribute)
+            property_data["covered_area"] = get_value_from_attribute(attribute)
         elif attr_id == "MAINTENANCE_FEE":
             property_data["expenses"] = get_value_from_attribute(attribute)
         elif attr_id == "PARKING_LOTS":

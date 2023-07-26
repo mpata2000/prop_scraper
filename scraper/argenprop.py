@@ -5,13 +5,11 @@ import requests
 
 from scraper.enums import Page,PropertyType
 from scraper.property import Property
+from scraper.utils import to_number
 
 URL_ARGENPROP="https://www.argenprop.com"
 
-def to_number(s):
-    number = re.sub(r'[^0-9]', '', s)
-    try: return int(number)
-    except ValueError: return 0
+
 
 def scrape_property_argenprop(element):
     property = Property(page=Page.ARGENPROP)
@@ -27,8 +25,6 @@ def scrape_property_argenprop(element):
     property.address = element.select_one('.card__address').get_text().strip()
     property.neighborhood = element.select('.card__title--primary')[-1].get_text().split(",")[0]
     property.expenses = to_number(element.select_one('.card__expenses').get_text())
-
-    title = element.select_one("h2.card__address").text.strip()
 
     # Extract the description
     description = element.select_one("p.card__info").text.strip()

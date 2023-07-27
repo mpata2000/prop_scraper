@@ -5,6 +5,7 @@ import brotli
 
 from scraper.enums import PropertyType, Currency, Page
 from scraper.property import Property
+from scraper.utils import NEIGHBORHOODS_CABA
 
 MELI_URL = "https://api.mercadolibre.com"
 
@@ -24,9 +25,8 @@ def get_value_from_attribute(attribute):
 def parse_properties(data):
     property_data = {}
     property_data["url"] = data.get("permalink", "")
-    property_data["title"] = data.get("title", "")
     property_data["price"] = int(data.get("price", 0))
-    property_data["currency"] = Currency.from_string(data.get("currency_id", "ARS"))
+    property_data["currency"] = Currency.from_str(data.get("currency_id", "ARS"))
     property_data["neighborhood"] = data.get("location", {}).get("neighborhood", {}).get("name", "")
     property_data["address"] = data.get("location", {}).get("address_line", "")
     property_data["page"] = Page.MELI
@@ -85,26 +85,13 @@ def get_api_response(url):
 # Get properties for rent in CABA
 # @return set of Property
 def get_rent_properties_caba():
-    # Get neighborhoods from wikipedia?
-    neighborhoods = [
-        "Agronomia", "Almagro", "Balvanera", "Barracas", "Belgrano", "Boedo", "Caballito",
-        "Chacarita", "Coghlan", "Colegiales", "Constitucion", "Flores", "Floresta", "La%20Boca",
-        "La%20Paternal", "Liniers", "Mataderos", "Monte%20Castro", "Monserrat", "Nueva%20Pompeya",
-        "Nunez", "Palermo", "Parque%20Avellaneda", "Parque%20Chacabuco", "Parque%20Chas",
-        "Parque%20Patricios", "Puerto%20Madero", "Recoleta", "Retiro", "Saavedra", "San%20Cristobal",
-        "San%20Nicolas", "San%20Telmo", "Velez%20Sarsfield", "Versalles", "Villa%20Crespo",
-        "Villa%20del%20Parque", "Villa%20Devoto", "Villa%20General%20Mitre", "Villa%20Lugano",
-        "Villa%20Luro", "Villa%20Ortuzar", "Villa%20Pueyrredon", "Villa%20Real", "Villa%20Riachuelo",
-        "Villa%20Santa%20Rita", "Villa%20Soldati", "Villa%20Urquiza"
-    ]
-
     base_url = f"{MELI_URL}/sites/MLA/search?category=MLA1473"
     urls = []
-    for neighborhood in neighborhoods:
+    for neighborhood in ["Belgrano","Nunez"]:#NEIGHBORHOODS_CABA:
         urls.append(f"{base_url}&q={neighborhood}")
 
-    properties = set()
-
+    
+    ids = []
     for url in urls:
         offset = 0
         max_results = 1
@@ -113,11 +100,12 @@ def get_rent_properties_caba():
             json_data = api_response.json()
 
             max_results = min(json_data["paging"]["total"], 1000) if max_results == 1 else max_results
-            ids = get_ids(json_data["results"])
-            ids_response = get_by_ids(ids)
-            for prop in ids_response:
-                property_data = parse_properties(prop["body"])
-                properties.add(property_data)
+            ids.extend(get_ids(json_data["results"]))
             offset += 50
 
+    properties = set()
+    ids_response = get_by_ids(ids)
+    for prop in ids_response:
+        property_data = parse_properties(prop["body"])
+        properties.add(property_data)
     return properties

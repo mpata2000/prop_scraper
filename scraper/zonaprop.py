@@ -13,27 +13,12 @@ ZONAPROP_API_PATH = "/rplis-api/postings"
 URL_ZONAPROP = "https://www.zonaprop.com.ar"
 
 
-def get_max_page_number(response):
-    return response["paging"]["totalPages"]
-
-
 def get_response_api(pageNumber):
     with open('./scraper/resources/zonapropRequest.json') as file:
         file_contents = file.read()
     requestJson = json.loads(file_contents)
     requestJson["pagina"] = pageNumber
     scraper = cloudscraper.create_scraper()
-    headers = {
-        'Accept':'*/*',
-        'Accept-Encoding':'gzip, deflate, br',
-        'Accept-Language':'es-AR,es-US;q=0.9,es;q=0.8,en-US;q=0.7,en;q=0.6,es-419;q=0.5',
-        'Content-Type':'application/json',
-        'User-Agent':'PostmanRuntime/7.30.0',
-        'Postman-Token': 'ca67ce84-f171-4fb3-a5b8-5c5f1a848b37',
-        'Connection':'keep-alive',
-        'Cache-Control':'no-cache',
-        'Host':'www.zonaprop.com.ar'
-         }
     response = scraper.post(URL_ZONAPROP+ZONAPROP_API_PATH,json=requestJson)
     return response
 

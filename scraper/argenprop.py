@@ -1,7 +1,7 @@
 
 import re
 from bs4 import BeautifulSoup
-import requests
+import cloudscraper
 
 from scraper.enums import Page,PropertyType
 from scraper.property import Property
@@ -24,7 +24,7 @@ def scrape_property_argenprop(element):
 
     property.address = element.select_one('.card__address').get_text().strip()
     property.neighborhood = element.select('.card__title--primary')[-1].get_text().split(",")[0]
-    property.expenses = to_number(element.select_one('.card__expenses').get_text())
+    property.expenses = to_number(element.select_one('.card__expenses').get_text()) if element.select_one('.card__expenses') else 0
 
     # Extract the description
     description = element.select_one("p.card__info").text.strip()
@@ -51,31 +51,22 @@ def scrape_property_argenprop(element):
             property.bathrooms = value
         elif icon_class == "icono-ambiente_cochera":
             property.garage = value
-        else:
-            pass
 
     return property
 
-def get_urls_argenprop():
-    url = URL_ARGENPROP + "/departamento-y-casa-alquiler-localidad-capital-federal"
-    response = requests.get(url)
-    doc = BeautifulSoup(response.content, "html.parser")
-    href = doc.select(".pagination__page>a")
-    max_pages = min(to_number(href[-2].get_text()), 99)
-    URLs = [url + (f"-pagina-{i}" if i != 1 else "") for i in range(1, max_pages + 1)]
-    return URLs
-
 def get_rent_properties_caba():
-    urls = get_urls_argenprop()
+    #urls = get_urls_argenprop()
     properties = set()
-
-    for url in urls:
+    scraper = cloudscraper.create_scraper()
+    url = URL_ARGENPROP + "/departamento-y-casa-alquiler-localidad-capital-federal"
+    while url != "":
         try:
-            response = requests.get(url)
+            response = scraper.get(url)
             doc = BeautifulSoup(response.content, "html.parser")
             elements = doc.select("div.listing__item")
             properties.update(scrape_property_argenprop(e) for e in elements)
-        except Exception as e:
-            print(f"Error reading URL. Error message: {str(e)}")
-
+            url = (URL_ARGENPROP+doc.select_one(".pagination__page-next>a")["href"]) if doc.select_one(".pagination__page-next>a") else ""
+        except:
+            print(f"Error al obtener propiedades de Argenprop at {url}")
+            break
     return properties

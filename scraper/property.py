@@ -1,6 +1,4 @@
-from scraper.enums.propertyType import PropertyType
-from scraper.enums.currency import Currency
-from scraper.enums.page import Page
+from scraper.enums import PropertyType, Currency, Page
 
 class Property:
     def __init__(
@@ -44,7 +42,7 @@ class Property:
 
     def __hash__(self):
         return hash(self.url)
-    
+
     def setPropertyType(self,str):
         self.prop_type = PropertyType.from_str(str)
 

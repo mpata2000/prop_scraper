@@ -1,11 +1,9 @@
 
-import re
 from bs4 import BeautifulSoup
 import cloudscraper
-
-from scraper.enums import Page,PropertyType
-from scraper.property import Property
-from scraper.utils import to_number
+from .enums import Page
+from .property import Property
+from .utils import to_number
 
 URL_ARGENPROP="https://www.argenprop.com"
 

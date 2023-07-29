@@ -16,3 +16,8 @@ NEIGHBORHOODS_CABA = [
 def to_number(str:str):
     try: return int(re.sub(r'[^0-9]', '', str))
     except ValueError: return 0
+
+# Split a list into chunks of the given size
+# @return list of chunks
+def chunks(input_list: list, chunk_size: int):
+    return [input_list[i:i+chunk_size] for i in range(0, len(input_list), chunk_size)]

@@ -1,13 +1,17 @@
 import requests
-import json
-import gzip
-import brotli
 
-from scraper.enums import PropertyType, Currency, Page
-from scraper.property import Property
-from scraper.utils import NEIGHBORHOODS_CABA, to_number
+from .enums import Currency, Page
+from .property import Property
+from .utils import NEIGHBORHOODS_CABA, to_number, chunks
 
 MELI_URL = "https://api.mercadolibre.com"
+
+# Make a GET request to the given url raising an exception if it fails
+# @return Response of the request
+def get_api_response(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    return response
 
 # Get ids from api response, max results for each url is 1000
 # @param urls list of urls of MercadoLibre
@@ -68,6 +72,7 @@ def parse_properties(data: dict):
 # @param ids list of ids of MercadoLibre properties
 # @return of response of the API
 def get_by_ids(ids):
+    # Split ids in chunks of 20 because the API only allows 20 ids per request
     urls = [f"{MELI_URL}/items?ids={','.join(ids_chunk)}" for ids_chunk in chunks(ids, 20)]
     properties_data = []
 
@@ -81,25 +86,12 @@ def get_by_ids(ids):
 
     return properties_data
 
-# Split a list into chunks of the given size
-# @return list of chunks
-def chunks(input_list: list, chunk_size: int):
-    return [input_list[i:i+chunk_size] for i in range(0, len(input_list), chunk_size)]
-
-# Make a GET request to the given url raising an exception if it fails
-# @return Response of the request
-def get_api_response(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response
-    
-
 # Get properties for rent in CABA
 # @return set of Property
 def get_rent_properties_caba():
     base_url = f"{MELI_URL}/sites/MLA/search?category=MLA1473"
     urls = [f"{base_url}&q={neighborhood}+capital+federal" for neighborhood in ["Belgrano","Caballito"]]#NEIGHBORHOODS_CABA]
-    
+
     ids = get_ids(urls)
 
     properties = set()

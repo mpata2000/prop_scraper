@@ -1,13 +1,8 @@
-from bs4 import BeautifulSoup
 import cloudscraper
-import urllib.request
 import json
-import gzip
-import brotli
 
-from scraper.enums import PropertyType, Currency, Page
-from scraper.property import Property
-from scraper.utils import to_number
+from .property import Property
+from .utils import to_number
 
 ZONAPROP_API_PATH = "/rplis-api/postings"
 URL_ZONAPROP = "https://www.zonaprop.com.ar"
@@ -22,11 +17,12 @@ def get_response_api(pageNumber:int):
     requestJson["pagina"] = pageNumber
     scraper = cloudscraper.create_scraper()
     response = scraper.post(URL_ZONAPROP+ZONAPROP_API_PATH,json=requestJson)
+    response.raise_for_status()
     return response
 
 
 def read_property_zonaprop(data:dict):
-    property = Property(page=Page.ZONAPROP)
+    property = Property()
 
     property.url = URL_ZONAPROP + data["url"]
 
@@ -84,12 +80,14 @@ def get_rent_properties_caba():
     properties = set()
 
     while page <= totalPages:
-        response = get_response_api(page).json()
-        totalPages = response["paging"]["totalPages"] if page == 1 else totalPages
-        postings = response["listPostings"]
-        for post in postings:
-            properties.add(read_property_zonaprop(post))
-
+        try:
+            response = get_response_api(page).json()
+            totalPages = response["paging"]["totalPages"] if page == 1 else totalPages
+            postings = response["listPostings"]
+            for post in postings:
+                properties.add(read_property_zonaprop(post))
+        except:
+            print(f"Error getting properties from Zonaprop page {page}")
         page += 1
 
     return properties

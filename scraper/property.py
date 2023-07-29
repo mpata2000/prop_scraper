@@ -6,8 +6,6 @@ class Property:
     def __init__(
         self,
         url="",
-        title="",
-        description="",
         prop_type=PropertyType.DEPARTMENT,
         price=0,
         currency=Currency.ARS,
@@ -20,25 +18,24 @@ class Property:
         address="",
         neighborhood="",
         garage=0,
-        page=Page.ZONAPROP
+        page=Page.ZONAPROP,
+        pics_urls:list[str]=[]
     ):
-        self.url = url
-        self.title = title
-        self.description = description
-        self.prop_type = prop_type
-        self.price = price
-        self.currency = currency
-        self.expenses = expenses
-        self.total_area = total_area
-        self.covered_area = covered_area
-        self.rooms = rooms
-        self.bedrooms = bedrooms
-        self.bathrooms = bathrooms
-        self.address = address
-        self.neighborhood = neighborhood
-        self.garage = garage
-        self.page = page
-        # TODO: add list of images url
+        self.url: str = url
+        self.prop_type: PropertyType = prop_type
+        self.price: int = price
+        self.currency: Currency = currency
+        self.expenses: int = expenses
+        self.total_area: int = total_area
+        self.covered_area: int = covered_area
+        self.rooms: int = rooms
+        self.bedrooms: int = bedrooms
+        self.bathrooms: int = bathrooms
+        self.address: int = address
+        self.neighborhood: int = neighborhood
+        self.garage: int = garage
+        self.page: Page = page
+        self.images: list[str] = pics_urls
 
     def __eq__(self, other):
         if not isinstance(other, Property):

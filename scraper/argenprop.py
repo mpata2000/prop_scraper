@@ -26,11 +26,9 @@ def scrape_property_argenprop(element):
     property.neighborhood = element.select('.card__title--primary')[-1].get_text().split(",")[0]
     property.expenses = to_number(element.select_one('.card__expenses').get_text()) if element.select_one('.card__expenses') else 0
 
-    # Extract the description
-    description = element.select_one("p.card__info").text.strip()
 
     # Extract the URLs of the images
-    image_urls = [img["data-src"] for img in element.select("ul.card__photos li img[data-src]") if img["data-src"]]
+    property.pics_url = [img["data-src"] for img in element.select("ul.card__photos li img[data-src]") if img["data-src"]]
 
 
     features = element.select('.card__main-features>li')

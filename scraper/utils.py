@@ -13,7 +13,6 @@ NEIGHBORHOODS_CABA = [
     ]
 
 
-def to_number(s):
-    number = re.sub(r'[^0-9]', '', s)
-    try: return int(number)
+def to_number(str:str):
+    try: return int(re.sub(r'[^0-9]', '', str))
     except ValueError: return 0

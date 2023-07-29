@@ -12,8 +12,10 @@ from scraper.utils import to_number
 ZONAPROP_API_PATH = "/rplis-api/postings"
 URL_ZONAPROP = "https://www.zonaprop.com.ar"
 
-
-def get_response_api(pageNumber):
+# Makes a request to the API and returns the response
+# @param pageNumber number of the page to request
+# @return response of the request
+def get_response_api(pageNumber:int):
     with open('./scraper/resources/zonapropRequest.json') as file:
         file_contents = file.read()
     requestJson = json.loads(file_contents)
@@ -23,29 +25,27 @@ def get_response_api(pageNumber):
     return response
 
 
-def read_property_zonaprop(data):
+def read_property_zonaprop(data:dict):
     property = Property(page=Page.ZONAPROP)
 
     property.url = URL_ZONAPROP + data["url"]
-    property.title = data["title"]
-    property.description = data["description"]
 
     # Set data of price (precio, moneda, expensas)
     operation_types = data["priceOperationTypes"]
     for operation_type in operation_types:
         if operation_type["operationType"]["name"] == "Alquiler":
             price = operation_type["prices"][0]
-            property.price = price["amount"] if "amount" in price else 0
-            property.set_currency(price["currency"] if "currency" in price else "ARS")
+            property.price = price.get("amount",0)
+            property.set_currency(price.get("currency", "ARS"))
+
+    property.pics_urls = [pic["resizeUrl1200x1200"] for pic in data["visiblePictures"]["pictures"]]
 
     property.expenses = data["expenses"]["amount"] if "expenses" in data and "amount" in data["expenses"] else 0
 
-    # Set data of features (superficie, ambientes, dormitorios, banios, cochera)
     features = data["mainFeatures"]
-    keys = features.keys()
 
-    for key in keys:
-        value = to_number(features[key]["value"]) if "value" in features[key] else 0
+    for key in features:
+        value = to_number(features[key].get("value",0))
 
         if key == "CFT100":
             property.totalArea = value
@@ -65,24 +65,31 @@ def read_property_zonaprop(data):
 
     # Set data of location (barrio, direccion, coordenadas)
     post_location = data["postingLocation"]
-    property.address = post_location["address"]["name"] if "address" in post_location and "name" in post_location["address"] else ""
+    property.address = post_location["address"].get("name", "")
 
-    if "location" in post_location and "label" in post_location["location"] and post_location["location"]["label"] == "BARRIO":
-        property.neighborhood = post_location["location"]["name"]
+    location = post_location.get("location", {})
+    if location.get("label") == "BARRIO":
+        property.neighborhood = location.get("name", "")
     else:
-        property.neighborhood = post_location["location"]["parent"]["name"] if "location" in post_location and "parent" in post_location["location"] and "name" in post_location["location"]["parent"] else ""
+        parent_location = location.get("parent", {})
+        property.neighborhood = parent_location.get("name", "")
 
     return property
 
-def zonaprop():
-
+# Get all the properties for rent in CABA from Zonaprop
+# @return set of properties
+def get_rent_properties_caba():
     page = 1
     totalPages = 1
     properties = set()
 
     while page <= totalPages:
         response = get_response_api(page).json()
-        totalPages = response["paging"]["totalPages"]
+        totalPages = response["paging"]["totalPages"] if page == 1 else totalPages
         postings = response["listPostings"]
         for post in postings:
             properties.add(read_property_zonaprop(post))
+
+        page += 1
+
+    return properties

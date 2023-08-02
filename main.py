@@ -39,7 +39,8 @@ def task():
     logger.info(f"Time taken to update the database: {elapsed_time:.2f} seconds for {len(properties)} properties")
     logger.info(f"There were {inserteds} new properties and {updateds} updated properties")
 
-    db.delete_inactive_properties()
+    numDeleted = db.delete_inactive_properties()
+    logger.info(f"There were {numDeleted} deleted properties")
     logger.info("Finished the scraper")
 
 def main():

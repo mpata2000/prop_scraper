@@ -3,27 +3,42 @@ import time
 import MySQLdb
 from dotenv import load_dotenv
 
+
 class PropertyDatabase:
     def __init__(self):
         load_dotenv()
-        self.connection = MySQLdb.connect(
-            host=os.getenv("HOST"),
-            user=os.getenv("USERNAME_PS"),
-            passwd=os.getenv("PASSWORD_PS"),
-            db=os.getenv("DATABASE_PROP"),
-            autocommit=True,
-            ssl_mode="VERIFY_IDENTITY"
-            #ssl={
-            #    "ca": "/etc/ssl/cert.pem"
-            #}
+        try:
+            self.connection = MySQLdb.connect(
+                host=os.getenv("HOST"),
+                user=os.getenv("USERNAME_PS"),
+                passwd=os.getenv("PASSWORD_PS"),
+                db=os.getenv("DATABASE_PROP"),
+                autocommit=True,
+                ssl_mode="VERIFY_IDENTITY"
+                #ssl={
+                #    "ca": "/etc/ssl/cert.pem"
+                #}
             )
-        self.cursor = self.connection.cursor()
+            self.cursor = self.connection.cursor()
+        except MySQLdb.Error as e:
+            logging.error(f"Error connecting to the database: {e}")
 
     def __del__(self):
         if self.cursor:
             self.cursor.close()
         if self.connection:
             self.connection.close()
+
+    def query(self, query, data=None):
+        try:
+            if data is not None:
+                self.cursor.execute(query, data)
+            else:
+                self.cursor.execute(query)
+            return self.cursor.fetchall()
+        except MySQLdb.Error as e:
+            logging.error(f"Error executing query: {e}")
+            return None
 
     def insert_property(self, property):
         query = """
@@ -41,7 +56,7 @@ class PropertyDatabase:
         property_data["currency"] = property.currency.value
         property_data["page"] = property.page.value
 
-        self.cursor.execute(query, property_data)
+        self.query(query, property_data)
 
     def get_properties(self):
         query = """
@@ -49,10 +64,7 @@ class PropertyDatabase:
         FROM active_properties
         """
 
-        self.cursor.execute(query)
-        properties = self.cursor.fetchall()
-
-        return properties
+        return self.query(query)
 
     def update_property_last_read_date(self, property_url):
         query = """
@@ -61,7 +73,7 @@ class PropertyDatabase:
         WHERE url = %s
         """
 
-        self.cursor.execute(query, (property_url,))
+        self.query(query, (property_url,))
 
     def delete_inactive_properties(self):
         query = """
@@ -69,7 +81,5 @@ class PropertyDatabase:
         WHERE last_read_date <= DATE_SUB(NOW(), INTERVAL 7 DAY)
         """
 
-        self.cursor.execute(query)
-        row_count = self.cursor.rowcount
-
-        return row_count
+        deleted = self.query(query)
+        return self.cursor.rowcount if deleted is not None else 0

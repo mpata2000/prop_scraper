@@ -2,6 +2,7 @@ import requests
 import json
 import logging
 import time
+import traceback
 
 from .enums import Currency, Page
 from .property import Property
@@ -30,8 +31,8 @@ def get_ids(urls: list[str]):
                 api_response = get_api_response(url + f"&offset={offset}")
                 json_data = api_response.json()
                 ids.extend([x.get("id", "") for x in json_data["results"]])
-            except:
-                print(f"Error getting ids from {url}")
+            except Exception as e:
+                logger.error(f"Error getting ids from {url} with offset {offset}: {e}")
 
             max_results = min(json_data["paging"]["total"], 1000) if max_results == 1 else max_results
             offset += 50
@@ -85,8 +86,8 @@ def get_by_ids(ids):
             api_response = get_api_response(url)
             response_json = api_response.json()
             properties_data.extend(response_json)
-        except:
-            print(f"Error getting properties from {url}")
+        except Exception as e:
+            logger.error(f"Error getting response from MercadoLibre: {e}")
 
     return properties_data
 
@@ -95,15 +96,19 @@ def get_by_ids(ids):
 def get_rent_properties_caba():
     start_time = time.time()
     base_url = f"{MELI_URL}/sites/MLA/search?category=MLA1473"
-    urls = [f"{base_url}&q={neighborhood}+capital+federal" for neighborhood in ["Belgrano","Nunez"]]#NEIGHBORHOODS_CABA]
+    urls = [f"{base_url}&q={neighborhood}+capital+federal" for neighborhood in NEIGHBORHOODS_CABA]
 
     ids = get_ids(urls)
 
     properties = set()
     ids_response = get_by_ids(ids)
     for prop in ids_response:
-        property_data = parse_properties(prop["body"])
-        properties.add(property_data)
+        try:
+            property_data = parse_properties(prop["body"])
+            properties.add(property_data)
+        except Exception as e:
+            logger.error(f"Error parsing property from MercadoLibre: {e}")
+            logger.error(traceback.format_exc())
 
     elapsed_time = time.time() - start_time
     logger.info(f"Time taken to get properties from MercadoLibre: {elapsed_time:.2f} seconds for {len(properties)} properties")

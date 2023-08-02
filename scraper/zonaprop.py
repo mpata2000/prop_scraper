@@ -2,6 +2,7 @@ import cloudscraper
 import json
 import logging
 import time
+import traceback
 
 from .property import Property
 from .utils import to_number
@@ -37,9 +38,13 @@ def read_property_zonaprop(data:dict):
             property.price = price.get("amount",0)
             property.set_currency(price.get("currency", "ARS"))
 
-    property.pics_urls = json.dumps([pic["resizeUrl1200x1200"] for pic in data["visiblePictures"]["pictures"]])
+    if data["visiblePictures"] is not None and data["visiblePictures"].get("pictures") is not None:
+        pics = data["visiblePictures"].get("pictures", [])
+        property.pics_urls = json.dumps([pic["resizeUrl1200x1200"] for pic in pics])
+    else:
+        property.pics_urls = json.dumps([])
 
-    property.expenses = data["expenses"]["amount"] if "expenses" in data and "amount" in data["expenses"] else 0
+    property.expenses = data["expenses"].get("amount", 0) if data["expenses"] is not None else 0
 
     features = data["mainFeatures"]
 
@@ -64,7 +69,7 @@ def read_property_zonaprop(data:dict):
 
     # Set data of location (barrio, direccion, coordenadas)
     post_location = data["postingLocation"]
-    property.address = post_location["address"].get("name", "")
+    property.address = post_location["address"].get("name", "") if post_location["address"] is not None else ""
 
     location = post_location.get("location", {})
     if location.get("label") == "BARRIO":
@@ -90,8 +95,10 @@ def get_rent_properties_caba():
             postings = response["listPostings"]
             for post in postings:
                 properties.add(read_property_zonaprop(post))
-        except:
-            print(f"Error getting properties from Zonaprop page {page}")
+        except Exception as e:
+            logger.error(f"Error getting properties from Zonaprop at page {page}: {e}")
+            logger.error(traceback.format_exc())
+            
         page += 1
 
     elapsed_time = time.time() - start_time

@@ -4,6 +4,7 @@ import cloudscraper
 import json
 import logging
 import time
+import traceback
 from .enums import Page
 from .property import Property
 from .utils import to_number
@@ -20,7 +21,7 @@ def scrape_property_argenprop(element):
 
     card_price = element.select_one('p.card__price')
     if card_price.select_one('.card__noprice') is None:
-        property.currency = card_price.select_one('.card__currency').text.strip()
+        property.set_currency(card_price.select_one('.card__currency').text.strip())
         property.price = to_number(card_price.contents[2])
 
     property.address = element.select_one('.card__address').get_text().strip()
@@ -65,9 +66,9 @@ def get_rent_properties_caba():
             elements = doc.select("div.listing__item")
             properties.update(scrape_property_argenprop(e) for e in elements)
             url = (URL_ARGENPROP+doc.select_one(".pagination__page-next>a")["href"]) if doc.select_one(".pagination__page-next>a") else ""
-        except:
-            print(f"Error al obtener propiedades de Argenprop at {url}")
-            break
+        except Exception as e:
+            logger.error(f"Error getting response from Argenprop at {url} : {e}")
+            logger.error(traceback.format_exc())
 
     elapsed_time = time.time() - start_time
     logger.info(f"Time taken to get properties from Argenprop: {elapsed_time:.2f} seconds for {len(properties)} properties")

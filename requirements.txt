@@ -4,4 +4,4 @@ requests
 brotli
 python-dotenv
 mysqlclient
-pymysql
+schedule

@@ -2,6 +2,7 @@ from scraper import zonaprop,mercadolibre,argenprop
 from database import PropertyDatabase
 from scraper.property import Property
 from scraper.enums import Currency, Page, PropertyType
+import schedule
 
 import logging
 import time
@@ -10,14 +11,15 @@ import time
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 
-def main():
-    db = PropertyDatabase()
+def task():
+    logger.info(f"Starting the scraper at {time.strftime('%d/%m/%Y')} , {time.strftime('%H:%M:%S')}")
     properties = set()
 
-    #properties.update(zonaprop.get_rent_properties_caba())
+    properties.update(zonaprop.get_rent_properties_caba())
     properties.update(mercadolibre.get_rent_properties_caba())
-    #properties.update(argenprop.get_rent_properties_caba())
+    properties.update(argenprop.get_rent_properties_caba())
 
+    db = PropertyDatabase()
     db_properties = db.get_properties()
     # Get a set of URLs from the list of tuples db_properties
     existing_urls = {url for _, url in db_properties}
@@ -38,6 +40,16 @@ def main():
     logger.info(f"There were {inserteds} new properties and {updateds} updated properties")
 
     db.delete_inactive_properties()
+    logger.info("Finished the scraper")
+
+def main():
+    logger.info(f"Starting app at {time.strftime('%H:%M:%S')}")
+    schedule.every().day.at("17:51").do(task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+    
 
 
 

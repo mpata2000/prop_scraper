@@ -1,12 +1,45 @@
 from scraper import zonaprop,mercadolibre,argenprop
-from database import insert_property,delete_inactive_properties,get_properties
+from database import PropertyDatabase
 from scraper.property import Property
 from scraper.enums import Currency, Page, PropertyType
 
-#argenprop.get_rent_properties_caba()
-prop = Property(url="test",prop_type=PropertyType.DEPARTMENT,price=1000,currency=Currency.ARS,expenses=5,total_area=3,covered_area=2,rooms=0,bedrooms=0,bathrooms=6,address="Guido 300",neighborhood="Belgrano",garage=0,page=Page.ARGENPROP,pics_urls="[]")
-#insert_property(prop)
-#delete_inactive_properties()
-get_properties()
-#zonaprop.get_rent_properties_caba()
-#mercadolibre.get_rent_properties_caba()
+import logging
+import time
+
+# Define the logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger()
+
+def main():
+    db = PropertyDatabase()
+    properties = set()
+
+    #properties.update(zonaprop.get_rent_properties_caba())
+    properties.update(mercadolibre.get_rent_properties_caba())
+    #properties.update(argenprop.get_rent_properties_caba())
+
+    db_properties = db.get_properties()
+    # Get a set of URLs from the list of tuples db_properties
+    existing_urls = {url for _, url in db_properties}
+    start_time = time.time()
+    inserteds = 0
+    updateds = 0
+
+    for property in properties:
+        if property.url not in existing_urls:
+            db.insert_property(property)
+            inserteds += 1
+        else:
+            db.update_property_last_read_date(property.url)
+            updateds += 1
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"Time taken to update the database: {elapsed_time:.2f} seconds for {len(properties)} properties")
+    logger.info(f"There were {inserteds} new properties and {updateds} updated properties")
+
+    db.delete_inactive_properties()
+
+
+
+if __name__ == "__main__":
+    main()

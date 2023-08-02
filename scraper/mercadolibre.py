@@ -1,11 +1,14 @@
 import requests
 import json
+import logging
+import time
 
 from .enums import Currency, Page
 from .property import Property
 from .utils import NEIGHBORHOODS_CABA, to_number, chunks
 
 MELI_URL = "https://api.mercadolibre.com"
+logger = logging.getLogger()
 
 # Make a GET request to the given url raising an exception if it fails
 # @return Response of the request
@@ -46,7 +49,7 @@ def parse_properties(data: dict):
     property_data["address"] = data.get("location", {}).get("address_line", "")
     property_data["page"] = Page.MELI
 
-    property_data["pics_url"] = json.dumps([pic["url"] for pic in data.get("pictures", [])])
+    property_data["pics_urls"] = json.dumps([pic["url"] for pic in data.get("pictures", [])])
 
     attributes = data.get("attributes", [])
     for attribute in attributes:
@@ -90,8 +93,9 @@ def get_by_ids(ids):
 # Get properties for rent in CABA
 # @return set of Property
 def get_rent_properties_caba():
+    start_time = time.time()
     base_url = f"{MELI_URL}/sites/MLA/search?category=MLA1473"
-    urls = [f"{base_url}&q={neighborhood}+capital+federal" for neighborhood in ["Belgrano","Caballito"]]#NEIGHBORHOODS_CABA]
+    urls = [f"{base_url}&q={neighborhood}+capital+federal" for neighborhood in ["Belgrano","Nunez"]]#NEIGHBORHOODS_CABA]
 
     ids = get_ids(urls)
 
@@ -100,4 +104,7 @@ def get_rent_properties_caba():
     for prop in ids_response:
         property_data = parse_properties(prop["body"])
         properties.add(property_data)
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"Time taken to get properties from MercadoLibre: {elapsed_time:.2f} seconds for {len(properties)} properties")
     return properties

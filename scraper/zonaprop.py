@@ -1,11 +1,14 @@
 import cloudscraper
 import json
+import logging
+import time
 
 from .property import Property
 from .utils import to_number
 
 ZONAPROP_API_PATH = "/rplis-api/postings"
 URL_ZONAPROP = "https://www.zonaprop.com.ar"
+logger = logging.getLogger()
 
 # Makes a request to the API and returns the response
 # @param pageNumber number of the page to request
@@ -78,6 +81,7 @@ def get_rent_properties_caba():
     page = 1
     totalPages = 1
     properties = set()
+    start_time = time.time()
 
     while page <= totalPages:
         try:
@@ -90,4 +94,6 @@ def get_rent_properties_caba():
             print(f"Error getting properties from Zonaprop page {page}")
         page += 1
 
+    elapsed_time = time.time() - start_time
+    logger.info(f"Time taken to get properties from Zonaprop: {elapsed_time:.2f} seconds for {len(properties)} properties")
     return properties

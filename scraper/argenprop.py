@@ -2,12 +2,14 @@
 from bs4 import BeautifulSoup
 import cloudscraper
 import json
+import logging
+import time
 from .enums import Page
 from .property import Property
 from .utils import to_number
 
 URL_ARGENPROP="https://www.argenprop.com"
-
+logger = logging.getLogger()
 
 
 def scrape_property_argenprop(element):
@@ -27,7 +29,7 @@ def scrape_property_argenprop(element):
 
 
     # Extract the URLs of the images
-    property.pics_url = json.dumps([img["data-src"] for img in element.select("ul.card__photos li img[data-src]") if img["data-src"]])
+    property.pics_urls = json.dumps([img["data-src"] for img in element.select("ul.card__photos li img[data-src]") if img["data-src"]])
 
 
     features = element.select('.card__main-features>li')
@@ -52,7 +54,7 @@ def scrape_property_argenprop(element):
     return property
 
 def get_rent_properties_caba():
-    #urls = get_urls_argenprop()
+    start_time = time.time()
     properties = set()
     scraper = cloudscraper.create_scraper()
     url = URL_ARGENPROP + "/departamento-y-casa-alquiler-localidad-capital-federal"
@@ -66,4 +68,7 @@ def get_rent_properties_caba():
         except:
             print(f"Error al obtener propiedades de Argenprop at {url}")
             break
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"Time taken to get properties from Argenprop: {elapsed_time:.2f} seconds for {len(properties)} properties")
     return properties

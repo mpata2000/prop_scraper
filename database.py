@@ -1,8 +1,10 @@
 import os
 import time
+import logging
 import MySQLdb
 from dotenv import load_dotenv
 
+logger = logging.getLogger()
 
 class PropertyDatabase:
     def __init__(self):
@@ -21,7 +23,7 @@ class PropertyDatabase:
             )
             self.cursor = self.connection.cursor()
         except MySQLdb.Error as e:
-            logging.error(f"Error connecting to the database: {e}")
+            logger.error(f"Error connecting to the database: {e}")
 
     def __del__(self):
         if self.cursor:
@@ -37,7 +39,7 @@ class PropertyDatabase:
                 self.cursor.execute(query)
             return self.cursor.fetchall()
         except MySQLdb.Error as e:
-            logging.error(f"Error executing query: {e}")
+            logger.error(f"Error executing query: {e}")
             return None
 
     def insert_property(self, property):

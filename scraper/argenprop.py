@@ -1,6 +1,7 @@
 
 from bs4 import BeautifulSoup
 import cloudscraper
+import json
 from .enums import Page
 from .property import Property
 from .utils import to_number
@@ -26,7 +27,7 @@ def scrape_property_argenprop(element):
 
 
     # Extract the URLs of the images
-    property.pics_url = [img["data-src"] for img in element.select("ul.card__photos li img[data-src]") if img["data-src"]]
+    property.pics_url = json.dumps([img["data-src"] for img in element.select("ul.card__photos li img[data-src]") if img["data-src"]])
 
 
     features = element.select('.card__main-features>li')

@@ -17,7 +17,7 @@ class Property:
         neighborhood="",
         garage=0,
         page=Page.ZONAPROP,
-        pics_urls:list[str]=[]
+        pics_urls:str=[]
     ):
         self.url: str = url
         self.prop_type: PropertyType = prop_type
@@ -33,7 +33,7 @@ class Property:
         self.neighborhood: int = neighborhood
         self.garage: int = garage
         self.page: Page = page
-        self.images: list[str] = pics_urls
+        self.pics_urls: str = pics_urls
 
     def __eq__(self, other):
         if not isinstance(other, Property):

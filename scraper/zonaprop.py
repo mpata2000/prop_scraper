@@ -34,7 +34,7 @@ def read_property_zonaprop(data:dict):
             property.price = price.get("amount",0)
             property.set_currency(price.get("currency", "ARS"))
 
-    property.pics_urls = [pic["resizeUrl1200x1200"] for pic in data["visiblePictures"]["pictures"]]
+    property.pics_urls = json.dumps([pic["resizeUrl1200x1200"] for pic in data["visiblePictures"]["pictures"]])
 
     property.expenses = data["expenses"]["amount"] if "expenses" in data and "amount" in data["expenses"] else 0
 

@@ -46,7 +46,7 @@ def parse_properties(data: dict):
     property_data["url"] = data.get("permalink", "")
     property_data["price"] = int(data.get("price", 0))
     property_data["currency"] = Currency.from_str(data.get("currency_id", "ARS"))
-    property_data["neighborhood"] = data.get("location", {}).get("neighborhood", {}).get("name", "")
+    property_data["neighborhood"] = data.get("location", {}).get("neighborhood", {}).get("name", "").upper()
     property_data["address"] = data.get("location", {}).get("address_line", "")
     property_data["page"] = Page.MELI
 

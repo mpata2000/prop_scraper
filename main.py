@@ -45,12 +45,12 @@ def task():
 
 def main():
     logger.info(f"Starting app at {time.strftime('%H:%M:%S')}")
-    schedule.every().day.at("05:00").do(task)
+    schedule.every().day.at("03:44").do(task)
 
     while True:
         schedule.run_pending()
         time.sleep(1)
-    
+
 
 
 

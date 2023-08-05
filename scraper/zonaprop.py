@@ -76,6 +76,8 @@ def read_property_zonaprop(data:dict):
         parent_location = location.get("parent", {})
         property.neighborhood = parent_location.get("name", "")
 
+    property.neighborhood = property.neighborhood.upper()
+
     return property
 
 # Get all the properties for rent in CABA from Zonaprop

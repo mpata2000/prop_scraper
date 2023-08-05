@@ -50,7 +50,7 @@ def parse_properties(data: dict):
     property_data["address"] = data.get("location", {}).get("address_line", "")
     property_data["page"] = Page.MELI
 
-    property_data["pics_urls"] = json.dumps([pic["url"] for pic in data.get("pictures", [])])
+    property_data["pics_urls"] = [pic["url"] for pic in data.get("pictures", [])]
 
     attributes = data.get("attributes", [])
     for attribute in attributes:

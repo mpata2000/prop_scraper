@@ -40,9 +40,7 @@ def read_property_zonaprop(data:dict):
 
     if data["visiblePictures"] is not None and data["visiblePictures"].get("pictures") is not None:
         pics = data["visiblePictures"].get("pictures", [])
-        property.pics_urls = json.dumps([pic["resizeUrl1200x1200"] for pic in pics])
-    else:
-        property.pics_urls = json.dumps([])
+        property.pics_urls = [pic["resizeUrl1200x1200"] for pic in pics]
 
     property.expenses = data["expenses"].get("amount", 0) if data["expenses"] is not None else 0
 
@@ -98,7 +96,7 @@ def get_rent_properties_caba():
         except Exception as e:
             logger.error(f"Error getting properties from Zonaprop at page {page}: {e}")
             logger.error(traceback.format_exc())
-            
+
         page += 1
 
     elapsed_time = time.time() - start_time

@@ -57,6 +57,7 @@ class PropertyDatabase:
         property_data["prop_type"] = property.prop_type.value
         property_data["currency"] = property.currency.value
         property_data["page"] = property.page.value
+        property_data["pics_urls"] = ",".join(property.pics_urls)
 
         self.query(query, property_data)
 
@@ -80,7 +81,7 @@ class PropertyDatabase:
     def delete_inactive_properties(self):
         query = """
         DELETE FROM active_properties
-        WHERE last_read_date <= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        WHERE last_read_date <= DATE_SUB(NOW(), INTERVAL 3 DAY)
         """
 
         deleted = self.query(query)

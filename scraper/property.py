@@ -17,7 +17,7 @@ class Property:
         neighborhood="",
         garage=0,
         page=Page.ZONAPROP,
-        pics_urls:str=[]
+        pics_urls=[]
     ):
         self.url: str = url
         self.prop_type: PropertyType = prop_type

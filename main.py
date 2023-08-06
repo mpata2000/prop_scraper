@@ -32,7 +32,7 @@ def task():
             db.insert_property(property)
             inserteds += 1
         else:
-            db.update_property_last_read_date(property.url)
+            db.update_property(property)
             updateds += 1
 
     elapsed_time = time.time() - start_time
@@ -42,6 +42,7 @@ def task():
     numDeleted = db.delete_inactive_properties()
     logger.info(f"There were {numDeleted} deleted properties")
     logger.info("Finished the scraper")
+    db.close()
 
 def main():
     logger.info(f"Starting app at {time.strftime('%H:%M:%S')}")

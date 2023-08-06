@@ -25,7 +25,7 @@ def scrape_property_argenprop(element):
         property.price = to_number(card_price.contents[2])
 
     property.address = element.select_one('.card__address').get_text().strip()
-    property.neighborhood = element.select('.card__title--primary')[-1].get_text().split(",")[0]
+    property.neighborhood = element.select('.card__title--primary')[-1].get_text().split(",")[0].upper()
     property.expenses = to_number(element.select_one('.card__expenses').get_text()) if element.select_one('.card__expenses') else 0
 
 

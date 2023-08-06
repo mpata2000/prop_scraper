@@ -31,6 +31,9 @@ class PropertyDatabase:
         if self.connection:
             self.connection.close()
 
+    def close(self):
+        self.__del__()
+
     def query(self, query, data=None):
         try:
             if data is not None:
@@ -69,14 +72,14 @@ class PropertyDatabase:
 
         return self.query(query)
 
-    def update_property_last_read_date(self, property_url):
+    def update_property(self, property):
         query = """
         UPDATE active_properties
-        SET last_read_date = NOW()
+        SET price = %(price)s, expenses = %(expenses)s
         WHERE url = %s
         """
 
-        self.query(query, (property_url,))
+        self.query(query, (property.price, property.expenses, property.url))
 
     def delete_inactive_properties(self):
         query = """

@@ -12,9 +12,9 @@ class PropertyDatabase:
         try:
             self.connection = MySQLdb.connect(
                 host=os.getenv("HOST"),
-                user=os.getenv("USERNAME_PS"),
-                passwd=os.getenv("PASSWORD_PS"),
-                db=os.getenv("DATABASE_PROP"),
+                user=os.getenv("USERNAME_DB"),
+                passwd=os.getenv("PASSWORD_DB"),
+                db=os.getenv("DATABASE"),
                 autocommit=True,
                 ssl_mode="VERIFY_IDENTITY"
                 #ssl={

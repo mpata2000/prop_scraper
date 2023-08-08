@@ -76,10 +76,16 @@ class PropertyDatabase:
         query = """
         UPDATE active_properties
         SET price = %(price)s, expenses = %(expenses)s
-        WHERE url = %s
+        WHERE url = %(url)s
         """
 
-        self.query(query, (property.price, property.expenses, property.url))
+        data = {
+            'price': property.price,
+            'expenses': property.expenses,
+            'url': property.url
+        }
+
+        self.query(query, data)
 
     def delete_inactive_properties(self):
         query = """

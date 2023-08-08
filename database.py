@@ -25,14 +25,9 @@ class PropertyDatabase:
         except MySQLdb.Error as e:
             logger.error(f"Error connecting to the database: {e}")
 
-    def __del__(self):
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            self.connection.close()
-
     def close(self):
-        self.__del__()
+        self.cursor.close()
+        self.connection.close()
 
     def query(self, query, data=None):
         try:
